@@ -6,4 +6,4 @@ eleventyNavigation:
 ---
 # About Me
 
-I am a person that writes stuff.
+I am a cloud architect currently living in Southern California.
