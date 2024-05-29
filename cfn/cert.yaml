@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: TLS Certificate from ACM
+
+Parameters:
+  Hostname1:
+    Type: String
+    Description: The hostname for the certificate 
+    Default: sberts.com
+
+  Hostname2:
+    Type: String
+    Description: The hostname for the certificate 
+    Default: www.sberts.com
+
+  HostedZoneId:
+    Type: String
+    Description: The ID of the existing Route 53 Hosted Zone
+   
+Resources:
+
+ Certificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref Hostname1
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Ref Hostname1
+          HostedZoneId: !Ref HostedZoneId
+        - DomainName: !Ref Hostname2
+          HostedZoneId: !Ref HostedZoneId
+      SubjectAlternativeNames:
+        - !Ref Hostname2

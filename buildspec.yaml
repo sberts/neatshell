@@ -1,0 +1,10 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - npm install
+      - echo Build started on `date`
+      - npm run build
+      - echo Build completed on `date`
+      - aws s3 cp _site/ s3://sberts-blog/ --recursive
