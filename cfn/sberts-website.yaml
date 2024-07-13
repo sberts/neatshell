@@ -74,24 +74,16 @@ Resources:
                 Action: ['s3:*', 'logs:*', 'secretsmanager:GetSecretValue']
                 Resource: '*'
 
-  CodeBuildSourceCredential:
-    Type: AWS::CodeBuild::SourceCredential
-    Properties:
-      AuthType: PERSONAL_ACCESS_TOKEN
-      ServerType: GITHUB
-      Token: !Sub "{{resolve:secretsmanager:${GitHubToken}:SecretString:OAuthToken}}"
-
-
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: CityBuild
+      Name: deploy-sberts-blog
       Source:
         Type: GITHUB
         Location: !Ref RepoURL
         Auth:
           Type: OAUTH
-          Resource: !Ref CodeBuildSourceCredential
+          Resource: arn:aws:codebuild:us-west-2:965778215583:token/github
       Environment:
         Type: LINUX_CONTAINER
         Image: aws/codebuild/standard:4.0
@@ -110,7 +102,7 @@ Resources:
     Properties:
       OriginAccessControlConfig:
         Description: "origin access control(OAC) for allowing cloudfront to access S3 bucket"
-        Name: m10city-main-OAC
+        Name: sberts-blog-OAC
         OriginAccessControlOriginType: s3
         SigningBehavior: always
         SigningProtocol: sigv4
@@ -144,6 +136,7 @@ Resources:
             ResponsePagePath: /index.html
         HttpVersion: http2
         Aliases:
+          - sberts.com
           - www.sberts.com
         ViewerCertificate:
           AcmCertificateArn: !Sub arn:aws:acm:us-east-1:${AWS::AccountId}:certificate/${CertificateId}
