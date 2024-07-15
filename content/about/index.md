@@ -6,4 +6,6 @@ eleventyNavigation:
 ---
 # About Me
 
-I am a cloud architect currently living in Southern California.
+I am a Systems Architect based in Southern California. When I'm not immersed in the world of technology, I enjoy exploring the beautiful landscapes that the region offers.
+
+{% image "./gchike.jpg", "Bright Angel Trail" %}

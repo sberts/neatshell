@@ -1,5 +1,5 @@
 ---
-title: Setup a web site on AWS using S3, CloudFront, and CodeBuild
+title: Setup a static web site on AWS
 date: 2024-04-30
 draft: true
 ---
