@@ -1,13 +1,23 @@
----
-title: Static Web Site Hosting on AWS
-description: This post describes how to setup AWS to host a static web site.
-date: 2024-07-23
----
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Static Web Site
 
-In this post I will describe how to setup a static web site on AWS with S3 and CloudFront. I'll be defining all infrastructure in CloudFormation. First, I'll define a SSL certificate that I can use with CloudFront.
+Parameters:
+  BucketName:
+    Type: String
+    Description: Unique name for S3 bucket 
+    Default: enterbucketnamehere
 
-```
-  Certificate:
+  Hostname:
+    Type: String
+    Description: The hostname for the certificate 
+    Default: enteryourdomainhere.com
+
+  HostedZoneId:
+    Type: String
+    Description: The ID of the existing Route 53 Hosted Zone
+   
+Resources:
+ Certificate:
     Type: AWS::CertificateManager::Certificate
     Properties:
       DomainName: !Ref Hostname
@@ -19,11 +29,7 @@ In this post I will describe how to setup a static web site on AWS with S3 and C
           HostedZoneId: !Ref HostedZoneId
       SubjectAlternativeNames:
         - !Sub www.${Hostname}
-```
-
-Next, I'll define a S3 bucket to store web site files and an origin access identity to secure access.
-
-```
+        
   S3Bucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -47,17 +53,23 @@ Next, I'll define a S3 bucket to store web site files and an origin access ident
                 AWS:SourceArn: !Sub
                   - arn:aws:cloudfront::${AWS::AccountId}:distribution/${DistId}
                   - DistId: !GetAtt CloudFrontDistribution.Id
-```
 
-Then, I use CloudFront to serve content from S3. I'm defining a CloudFrontOriginAccessIdentity to allow CloudFront to access my S3 bucket and my CloudFront distribution.
+  DNSRecordMain:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub www.${Hostname}
+      Type: A
+      AliasTarget:
+        HostedZoneId: Z2FDTNDATAQYW2  # CloudFront hosted zone ID
+        DNSName: !GetAtt [CloudFrontDistribution, DomainName]
 
-```
   CloudFrontOriginAccessControl:
     Type: AWS::CloudFront::OriginAccessControl
     Properties:
       OriginAccessControlConfig:
         Description: "origin access control(OAC) for allowing cloudfront to access S3 bucket"
-        Name: static-site-OAC
+        Name: website-OAC
         OriginAccessControlOriginType: s3
         SigningBehavior: always
         SigningProtocol: sigv4
@@ -91,7 +103,8 @@ Then, I use CloudFront to serve content from S3. I'm defining a CloudFrontOrigin
             ResponsePagePath: /index.html
         HttpVersion: http2
         Aliases:
-          - !Ref ServerName
+          - !Ref Hostname
+          - !Sub www.${Hostname}
         ViewerCertificate:
           AcmCertificateArn: !Ref Certificate
           MinimumProtocolVersion: TLSv1.2_2021
@@ -112,11 +125,10 @@ Then, I use CloudFront to serve content from S3. I'm defining a CloudFrontOrigin
             Cookies:
               Forward: none
           ViewerProtocolPolicy: redirect-to-https
-```
+          FunctionAssociations:
+            - EventType: viewer-request
+              FunctionARN: !GetAtt DistributionFunction.FunctionMetadata.FunctionARN
 
-I'm using a CloudFront function to help serve web requests that I found here <a href="https://stackoverflow.com/questions/59634922/how-do-i-serve-index-html-in-subfolders-with-s3-cloudfront">https://stackoverflow.com/questions/59634922/how-do-i-serve-index-html-in-subfolders-with-s3-cloudfront</a>
-
-```
   DistributionFunction:
     Type: AWS::CloudFront::Function
     Properties:
@@ -141,6 +153,8 @@ I'm using a CloudFront function to help serve web requests that I found here <a 
         Comment: Redirect-Default-Index-Request
         Runtime: cloudfront-js-1.0
       Name: redirect-index-request
-```
 
-The full template can be found <a href="/content/template.yaml">here</a>. Once the template has been deployed, I can copy my web site files into the new S3 bucket and I should have a functioning web site. In the next post I'll describe how to create basic automation for deploying a web app.
+Outputs:
+  CloudFrontURLMain:
+    Value: !GetAtt [CloudFrontDistribution, DomainName]
+    Description: URL of the CloudFront distribution for the main environment
