@@ -3,6 +3,10 @@ title: Automate Deploying a Basic Web App
 description: This post describes how to setup AWS Codebuild to deploy a basic web site.
 date: 2024-07-25
 draft: true
+tags:
+  - Cloud
+  - AWS
+  - CodeBuild
 ---
 
 In this post I will describe how to automate deploying a basic web app with AWS CodeBuild. I'll be using the resources I created in the previous post. I'm going to be defining all my infrastructure using CloudFormation.

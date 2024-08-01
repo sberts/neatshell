@@ -2,8 +2,7 @@
 title: "Installing WordPress using Puppet"
 date: 2018-03-10T00:00:00-09:00
 draft: false
-categories: ["Linux"]
-tags: ["Apache", "CentOS", "Hiera", "MySQL", "PHP", "Puppet", "SELinux"]
+tags: ["Linux", "CentOS", "WordPress", "Puppet", "Hiera", "MySQL", "PHP", "Apache", "SELinux"]
 ---
 {% image "./wp.png", "WordPress logo" %}
 

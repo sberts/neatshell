@@ -2,8 +2,7 @@
 title: "OSPF over VPN with VyOS"
 date: 2014-08-23T00:00:00-09:00
 draft: false
-categories: ["Linux", "Networking"]
-tags: ["GRE", "IPSec", "OSPF", "VPN", "VyOS"]
+tags: ["Linux", "Networking", "VyOS", "GRE", "IPSec", "OSPF", "VPN"]
 ---
 {% image "./vyos.png", "vyos logo" %}
 

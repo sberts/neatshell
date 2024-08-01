@@ -2,6 +2,10 @@
 title: Static Web Site Hosting on AWS
 description: This post describes how to setup AWS to host a static web site.
 date: 2024-07-23
+tags:
+  - Cloud
+  - AWS
+  - CloudFormation
 ---
 
 In this post I will describe how to setup a static web site on AWS with S3 and CloudFront. I'll be defining all infrastructure in CloudFormation. First, I'll define a SSL certificate that I can use with CloudFront.

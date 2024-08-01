@@ -2,8 +2,7 @@
 title: "Configuring a Yealink Phone for Asterisk"
 date: 2013-02-19T00:00:00-09:00
 draft: false
-categories: ["Linux", "Networking"]
-tags: ["Asterisk", "PowerConnect", "SIP", "VLAN", "VoIP", "YeaLink"]
+tags: ["Linux", "Networking", "Asterisk", "PowerConnect", "SIP", "VLAN", "VoIP", "YeaLink"]
 ---
 {% image "./asterisk.png", "Asterisk logo" %}
 

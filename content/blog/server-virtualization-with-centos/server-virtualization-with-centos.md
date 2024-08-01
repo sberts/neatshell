@@ -3,8 +3,7 @@ title: "Server Virtualization with CentOS"
 date: 2012-11-08T00:00:00-09:00
 draft: false
 featuredImage: "/img/centos.png"
-categories: ["Linux"]
-tags: ["CentOS", "libvirt"]
+tags: ["Linux", "CentOS", "libvirt"]
 ---
 
 {% image "./centos.png", "centos logo" %}
