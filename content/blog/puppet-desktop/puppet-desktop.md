@@ -3,7 +3,7 @@ title: "Configure a Desktop with Puppet"
 description: This post describes how to setup a linux desktop with Puppet.
 date: 2018-03-19
 draft: false
-tags: ["CentOS", "i3wm", "Puppet", "Vim", "XRDP"]
+tags: ["Linux", "CentOS", "i3wm", "Puppet", "Vim", "XRDP"]
 ---
 
 {% image "./i3wm.png", "i3wm logo" %}

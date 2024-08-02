@@ -3,9 +3,9 @@ title: Using Active Directory and Group Policy
 description: This post describes the basics of Active Directory.
 date: 2013-07-20
 tags:
-  - windows server 2008r2
-  - active directory
-  - group policy
+  - Windows Server 2008R2
+  - Active Directory
+  - Group Policy
 ---
 
 {% image "./windows.png", "Windows logo" %}

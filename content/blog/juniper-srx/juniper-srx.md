@@ -3,6 +3,7 @@ title: Configuring Juniper SRX
 description: This post describes configuring a Juniper SRX.
 date: 2012-12-06
 tags:
+- Networking
 - DHCP
 - Juniper SRX
 - VLAN

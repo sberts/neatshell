@@ -3,6 +3,7 @@ title: Using a Dell PowerConnect Switch
 description: This post describes the basics of using a Dell PowerConnect switch.
 date: 2012-12-15
 tags:
+  - Networking
   - Dell PowerConnect
   - LACP
   - SNMP

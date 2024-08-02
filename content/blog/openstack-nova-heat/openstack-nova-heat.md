@@ -3,6 +3,7 @@ title: OpenStack Nova and Heat
 date: 2015-01-26
 draft: false
 tags:
+- Cloud
 - OpenStack
 - Heat
 - Nova

@@ -7,6 +7,7 @@ tags:
 - EC2
 - Git
 - Puppet
+- Cloud
 ---
 {% image "./puppet.png", "Puppet logo" %}
 

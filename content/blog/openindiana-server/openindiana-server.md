@@ -3,6 +3,7 @@ title: Building a Storage Server using OpenIndiana
 description: This post describe how to use OpenIndiana to build a storage server
 date: 2012-06-23
 tags:
+- Storage
 - iSCSI
 - OpenIndiana
 - OpenSolaris
