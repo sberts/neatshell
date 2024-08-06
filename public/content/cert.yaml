@@ -1,32 +1,32 @@
+---
 AWSTemplateFormatVersion: '2010-09-09'
-Description: TLS Certificate from ACM
+Description: TLS Certificate from ACM deployed in us-east-1
 
 Parameters:
-  Hostname1:
+  DomainName:
     Type: String
     Description: The hostname for the certificate 
-    Default: sberts.com
-
-  Hostname2:
-    Type: String
-    Description: The hostname for the certificate 
-    Default: www.sberts.com
+    Default: enteryourdomainhere.com
 
   HostedZoneId:
     Type: String
     Description: The ID of the existing Route 53 Hosted Zone
    
 Resources:
-
- Certificate:
+  Certificate:
     Type: AWS::CertificateManager::Certificate
     Properties:
-      DomainName: !Ref Hostname1
+      DomainName: !Ref DomainName
       ValidationMethod: DNS
       DomainValidationOptions:
-        - DomainName: !Ref Hostname1
+        - DomainName: !Ref DomainName
           HostedZoneId: !Ref HostedZoneId
-        - DomainName: !Ref Hostname2
+        - DomainName: !Sub www.${DomainName}
           HostedZoneId: !Ref HostedZoneId
       SubjectAlternativeNames:
-        - !Ref Hostname2
+        - !Sub www.${DomainName}
+
+Outputs:
+  CertificateArn:
+    Description: The ARN of the certificate
+    Value: !Ref Certificate

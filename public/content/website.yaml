@@ -1,38 +1,37 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deploy React Web App from a private GitHub repository
+Description: Static Web Site
 
 Parameters:
-  GitHubToken:
+  BucketName:
     Type: String
-    Description: GitHub token for accessing the repository
-    Default: githubtoken
+    Description: Unique name for S3 bucket 
+    Default: enterbucketnamehere
+
+  DomainName:
+    Type: String
+    Description: The hostname for the certificate 
+    Default: enteryourdomainhere.com
 
   HostedZoneId:
     Type: String
     Description: The ID of the existing Route 53 Hosted Zone
-    Default: Z24TPBHU3GV1XI
 
-  CertificateId:
+  Certificate:
     Type: String
-    Description: The ID of the existing ACM certificate
-    Default: bdea5efb-db5b-441b-8a58-9526deb878b4
+    Description: The ARN of the ACM certificate
 
-  RepoURL:
-    Type: String
-    Description: The URL of the GitHub repository
-    Default: https://github.com/sberts/sberts-blog.git
 Resources:
-
-  S3BucketMain:
+        
+  S3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: sberts-blog
+      BucketName: !Ref BucketName
       AccessControl: Private
 
   BucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
-      Bucket: !Ref S3BucketMain
+      Bucket: !Ref S3Bucket
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -40,69 +39,40 @@ Resources:
             Principal:
               Service: "cloudfront.amazonaws.com"
             Action: 's3:GetObject'
-            Resource: !Sub arn:aws:s3:::${S3BucketMain}/*
+            Resource: !Sub arn:aws:s3:::${S3Bucket}/*
             Condition:
               StringEquals:
                 AWS:SourceArn: !Sub
                   - arn:aws:cloudfront::${AWS::AccountId}:distribution/${DistId}
                   - DistId: !GetAtt CloudFrontDistribution.Id
 
-  DNSRecordMain:
+  RecordSetMain:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref HostedZoneId
-      Name: www.sberts.com
+      Name: !Ref DomainName
+      Type: A
+      AliasTarget:
+        HostedZoneId: Z2FDTNDATAQYW2
+        DNSName: !GetAtt CloudFrontDistribution.DomainName
+
+  RecordSetWww:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub www.${DomainName}
       Type: A
       AliasTarget:
         HostedZoneId: Z2FDTNDATAQYW2  # CloudFront hosted zone ID
-        DNSName: !GetAtt [CloudFrontDistribution, DomainName]
+        DNSName: !GetAtt CloudFrontDistribution.DomainName
 
-  CodeBuildRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: [codebuild.amazonaws.com]
-            Action: ['sts:AssumeRole']
-      Policies:
-        - PolicyName: CodeBuildPolicy
-          PolicyDocument:
-            Statement:
-              - Effect: Allow
-                Action: ['s3:*', 'logs:*', 'secretsmanager:GetSecretValue']
-                Resource: '*'
-
-  CodeBuildProject:
-    Type: AWS::CodeBuild::Project
-    Properties:
-      Name: deploy-sberts-blog
-      Source:
-        Type: GITHUB
-        Location: !Ref RepoURL
-        Auth:
-          Type: OAUTH
-          Resource: arn:aws:codebuild:us-west-2:965778215583:token/github
-      Environment:
-        Type: LINUX_CONTAINER
-        Image: aws/codebuild/standard:4.0
-        ComputeType: BUILD_GENERAL1_SMALL
-        EnvironmentVariables:
-          - Name: S3_BUCKET_MAIN
-            Value: !Ref S3BucketMain
-          # - Name: S3_BUCKET_DEV
-          #   Value: !Ref S3BucketDev
-      Artifacts:
-        Type: NO_ARTIFACTS
-      ServiceRole: !Ref CodeBuildRole
 
   CloudFrontOriginAccessControl:
     Type: AWS::CloudFront::OriginAccessControl
     Properties:
       OriginAccessControlConfig:
         Description: "origin access control(OAC) for allowing cloudfront to access S3 bucket"
-        Name: sberts-blog-OAC
+        Name: website-OAC
         OriginAccessControlOriginType: s3
         SigningBehavior: always
         SigningProtocol: sigv4
@@ -116,11 +86,11 @@ Resources:
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
     DependsOn:
-      - S3BucketMain
+      - S3Bucket
     Properties:
       DistributionConfig:
         Origins:
-          - DomainName: !Sub ${S3BucketMain}.s3.us-west-2.amazonaws.com
+          - DomainName: !Sub ${S3Bucket}.s3.us-west-2.amazonaws.com
             Id: static-hosting
             S3OriginConfig:
               OriginAccessIdentity: ""
@@ -136,10 +106,10 @@ Resources:
             ResponsePagePath: /index.html
         HttpVersion: http2
         Aliases:
-          - sberts.com
-          - www.sberts.com
+          - !Ref DomainName
+          - !Sub www.${DomainName}
         ViewerCertificate:
-          AcmCertificateArn: !Sub arn:aws:acm:us-east-1:${AWS::AccountId}:certificate/${CertificateId}
+          AcmCertificateArn: !Ref Certificate
           MinimumProtocolVersion: TLSv1.2_2021
           SslSupportMethod: sni-only
         DefaultCacheBehavior:
@@ -158,12 +128,42 @@ Resources:
             Cookies:
               Forward: none
           ViewerProtocolPolicy: redirect-to-https
+          FunctionAssociations:
+            - EventType: viewer-request
+              FunctionARN: !GetAtt DistributionFunction.FunctionMetadata.FunctionARN
+
+  DistributionFunction:
+    Type: AWS::CloudFront::Function
+    Properties:
+      AutoPublish: true
+      FunctionCode: |
+        function handler(event) {
+          var request = event.request;
+          var uri = request.uri;
+          
+          // Check whether the URI is missing a file name.
+          if (uri.endsWith('/')) {
+              request.uri += 'index.html';
+          } 
+          // Check whether the URI is missing a file extension.
+          else if (!uri.includes('.')) {
+              request.uri += '/index.html';
+          }
+
+          return request;
+        }
+      FunctionConfig:
+        Comment: Redirect-Default-Index-Request
+        Runtime: cloudfront-js-1.0
+      Name: redirect-index-request
 
 Outputs:
-  S3BucketMainOutput:
-    Value: !Ref S3BucketMain
-    Description: Name of the S3 bucket for main environment
+  S3Bucket:
+    Value: !Ref S3Bucket
+    Description: S3 Bucket that contains a static web site
 
   CloudFrontURLMain:
     Value: !GetAtt [CloudFrontDistribution, DomainName]
     Description: URL of the CloudFront distribution for the main environment
+
+  

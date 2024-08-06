@@ -6,26 +6,31 @@ tags:
   - Cloud
   - AWS
   - CloudFormation
+  - CloudFront
+  - S3
+  - Route 53
 ---
 
-In this post I will describe how to setup a static web site on AWS with S3 and CloudFront. I'll be defining all infrastructure in CloudFormation. First, I'll define a SSL certificate that I can use with CloudFront.
+In this post I will describe how to setup a static web site on AWS with S3 and CloudFront. I'll be defining all infrastructure in CloudFormation. 
+
+First, I need a SSL certificate that I can use with CloudFront. The SSL certificate must be created in us-east-1. I'll define it in it's own template:
 
 ```
   Certificate:
     Type: AWS::CertificateManager::Certificate
     Properties:
-      DomainName: !Ref Hostname
+      DomainName: !Ref DomainName
       ValidationMethod: DNS
       DomainValidationOptions:
-        - DomainName: !Ref Hostname
+        - DomainName: !Ref DomainName
           HostedZoneId: !Ref HostedZoneId
-        - DomainName: !Sub www.${Hostname}
+        - DomainName: !Sub www.${DomainName}
           HostedZoneId: !Ref HostedZoneId
       SubjectAlternativeNames:
-        - !Sub www.${Hostname}
+        - !Sub www.${DomainName}
 ```
 
-Next, I'll define a S3 bucket to store web site files and an origin access identity to secure access.
+After the certificate is created, I'll define the rest of the resources in another template which can be deployed in a different region. I'll define a S3 bucket to store web site files and an origin access identity to secure access.
 
 ```
   S3Bucket:
@@ -147,4 +152,28 @@ I'm using a CloudFront function to help serve web requests that I found here <a 
       Name: redirect-index-request
 ```
 
-The full template can be found <a href="/content/template.yaml">here</a>. Once the template has been deployed, I can copy my web site files into the new S3 bucket and I should have a functioning web site. In the next post I'll describe how to create basic automation for deploying a web app.
+Finally, I'll create the DNS records in Route 53:
+
+```
+  RecordSetMain:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref DomainName
+      Type: A
+      AliasTarget:
+        HostedZoneId: Z2FDTNDATAQYW2
+        DNSName: !GetAtt CloudFrontDistribution.DomainName
+
+  RecordSetWww:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub www.${DomainName}
+      Type: A
+      AliasTarget:
+        HostedZoneId: Z2FDTNDATAQYW2  # CloudFront hosted zone ID
+        DNSName: !GetAtt CloudFrontDistribution.DomainName
+```
+
+The certificate template can be found <a href="/content/cert.yaml">here</a>. The CloudFront template can be found <a href="/content/website.yaml">here</a>. Once both templates have been deployed, I copy my web site files into the new S3 bucket and I should now have a functioning web site.
