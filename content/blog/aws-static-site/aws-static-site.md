@@ -10,6 +10,7 @@ tags:
   - S3
   - Route 53
 ---
+{% image "./cloudfront.png", "AWS CloudFront" %}
 
 In this post I will describe how to setup a static web site on AWS with S3 and CloudFront. I'll be defining all infrastructure in CloudFormation. 
 

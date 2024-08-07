@@ -1,0 +1,19 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CodeBuild Source Credential for GitHub
+
+Parameters:
+  GitHubToken:
+    NoEcho: true
+    Type: String
+    Description: GitHub token to access the repository
+
+Resources:
+  GitHubSourceCredentials:
+    Type: AWS::CodeBuild::SourceCredential
+    Properties:
+      NoEcho: true
+      AuthType: PERSONAL_ACCESS_TOKEN
+      ServerType: GITHUB
+      Token: !Ref GitHubToken
+

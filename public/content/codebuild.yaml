@@ -1,0 +1,69 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CodeBuild for deploying to a S3 bucket
+
+Parameters:
+  ProjectName:
+    Type: String
+    Description: Codebuild project name
+    Default: deploy-myapp
+ 
+  RepoURL:
+    Type: String
+    Description: The URL of the GitHub repository
+    Default: https://github.com/username/repo.git
+
+  BranchName:
+    Type: String
+    Description: The branch to deploy
+    Default: main
+
+Resources:
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [codebuild.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      Policies:
+        - PolicyName: CodeBuildPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action: ['s3:*', 'logs:*', 'secretsmanager:GetSecretValue']
+                Resource: '*'
+
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Ref ProjectName
+      Source:
+        Type: GITHUB
+        Location: !Ref RepoURL
+        BuildSpec: |
+          version: 0.2
+          phases:
+            install:
+              commands:
+                - echo Installing dependencies...
+                - npm install
+            build:
+              commands:
+                - echo Building the project...
+                - npm run build
+                - aws s3 sync _site/ s3://$S3BUCKET
+                - echo Build completed on `date`
+      SourceVersion: !Ref BranchName
+      Environment:
+        Type: LINUX_CONTAINER
+        Image: aws/codebuild/standard:4.0
+        ComputeType: BUILD_GENERAL1_SMALL
+        EnvironmentVariables:
+          - Name: S3BUCKET
+            Value: !Ref S3Bucket
+      Artifacts:
+        Type: NO_ARTIFACTS
+      ServiceRole: !Ref CodeBuildRole
