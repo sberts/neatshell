@@ -53,7 +53,7 @@ And finally, the CodeBuild project:
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: deploy-sberts-blog
+      Name: !Ref ProjectName
       Source:
         Type: GITHUB
         Location: !Ref RepoURL
