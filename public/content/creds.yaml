@@ -3,17 +3,15 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: CodeBuild Source Credential for GitHub
 
 Parameters:
-  GitHubToken:
-    NoEcho: true
+  SecretName:
     Type: String
-    Description: GitHub token to access the repository
+    Description: Name of secret with GitHub token
+    Default: "github"
 
 Resources:
-  GitHubSourceCredentials:
+  CodeBuildSourceCredential:
     Type: AWS::CodeBuild::SourceCredential
     Properties:
-      NoEcho: true
       AuthType: PERSONAL_ACCESS_TOKEN
       ServerType: GITHUB
-      Token: !Ref GitHubToken
-
+      Token: !Sub "{{resolve:secretsmanager:${SecretName}:SecretString}}"

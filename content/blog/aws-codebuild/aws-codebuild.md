@@ -14,19 +14,18 @@ tags:
 
 In this post I will describe how to use AWS CodeBuild to automatically deploy a web site to S3. I'll be using the resources I created in the previous post. I'm going to continue defining all my infrastructure using CloudFormation.
 
-First, I'll create credentials to access GitHub. I'll place the credentials resource in it's own template. The token itself will need to be created on GitHub's web site and I will pass it to the template as a parameter.
+First, I'll create credentials to access GitHub. I'll place the credentials resource in it's own template. The token itself will need to be created on GitHub's web site. From account settings, go to developer settings. Create a new personal access token and select classic token. I will then store my new token in Secrets Manager in a secret named github where it can then be used by CloudFormation:
 
 ```
-  GitHubSourceCredentials:
+  CodeBuildSourceCredential:
     Type: AWS::CodeBuild::SourceCredential
     Properties:
-      NoEcho: true
       AuthType: PERSONAL_ACCESS_TOKEN
       ServerType: GITHUB
-      Token: !Ref GitHubToken
+      Token: !Sub "{{resolve:secretsmanager:${SecretName}:SecretString}}"
 ```
 
-Next, I'll define the IAM role for the CodeBuild Project. The rest of the resources will be in another template:
+Next, I'll define the IAM role for the CodeBuild Project. The rest of the resources will be defined in another template:
 
 ```
   CodeBuildRole:
@@ -57,16 +56,32 @@ And finally, the CodeBuild project:
       Source:
         Type: GITHUB
         Location: !Ref RepoURL
+        BuildSpec: |
+          version: 0.2
+          phases:
+            install:
+              commands:
+                - echo Installing dependencies...
+                - npm install
+            build:
+              commands:
+                - echo Building the project...
+                - npm run build
+                - aws s3 sync $OUTPUTFOLDER s3://$S3BUCKET
+                - echo Build completed on `date`
+      SourceVersion: !Ref BranchName
       Environment:
         Type: LINUX_CONTAINER
         Image: aws/codebuild/standard:4.0
         ComputeType: BUILD_GENERAL1_SMALL
         EnvironmentVariables:
-          - Name: S3_BUCKET
+          - Name: S3BUCKET
             Value: !Ref S3Bucket
+          - Name: OUTPUTFOLDER
+            Value: !Ref OutputFolder
       Artifacts:
         Type: NO_ARTIFACTS
       ServiceRole: !Ref CodeBuildRole
 ```
 
-A GitHub Webhook is created which will run this codebuild job for any commits on the specified branch. The source credential template can be found <a href="/content/token.yaml">here</a>. The CodeBuild project template can be found <a href="/content/codebuild.yaml">here</a>.
+A GitHub Webhook is created which will run this codebuild job for any commits on the specified branch. The source credential template can be found <a href="/content/creds.yaml">here</a>. The CodeBuild project template can be found <a href="/content/codebuild.yaml">here</a>.

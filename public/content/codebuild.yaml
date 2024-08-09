@@ -18,6 +18,16 @@ Parameters:
     Description: The branch to deploy
     Default: main
 
+  S3Bucket:
+    Type: String
+    Description: The S3 bucket to deploy to
+    Default: myapp-bucket
+
+  OutputFolder:
+    Type: String
+    Description: The folder to deploy
+    Default: _site
+
 Resources:
   CodeBuildRole:
     Type: AWS::IAM::Role
@@ -54,7 +64,7 @@ Resources:
               commands:
                 - echo Building the project...
                 - npm run build
-                - aws s3 sync _site/ s3://$S3BUCKET
+                - aws s3 sync $OUTPUTFOLDER s3://$S3BUCKET
                 - echo Build completed on `date`
       SourceVersion: !Ref BranchName
       Environment:
@@ -64,6 +74,8 @@ Resources:
         EnvironmentVariables:
           - Name: S3BUCKET
             Value: !Ref S3Bucket
+          - Name: OUTPUTFOLDER
+            Value: !Ref OutputFolder
       Artifacts:
         Type: NO_ARTIFACTS
       ServiceRole: !Ref CodeBuildRole
