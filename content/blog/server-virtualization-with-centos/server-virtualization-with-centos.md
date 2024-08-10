@@ -45,7 +45,7 @@ yum groupinstall Virtualization "Virtualization Platform"
 
 <h4>Configure Storage</h4>
 
-</p>For more information on building a storage server, check out this related post: <a href="https://neatshell.com/openindiana-iscsi-storage/">Building a Storage Server with OpenIndiana</a>.</p>
+</p>For more information on building a storage server, check out this related post: <a href="/blog/openindiana-server/">Building a Storage Server with OpenIndiana</a>.</p>
 
 <p>Install iSCSI and multipath software.</p>
 

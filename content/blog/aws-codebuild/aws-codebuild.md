@@ -1,8 +1,7 @@
 ---
 title: Using AWS CodeBuild to Deploy a Web Site
 description: This post describes how to setup AWS Codebuild to deploy a basic web site.
-date: 2024-07-25
-draft: true
+date: 2024-08-09
 tags:
   - Cloud
   - AWS

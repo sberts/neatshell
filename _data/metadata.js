@@ -1,11 +1,11 @@
 module.exports = {
-	title: "neatshell",
-	url: "https://neatshell.com/",
+	title: "sberts",
+	url: "https://sberts.com/",
 	language: "en",
 	description: "Personal web site",
 	author: {
 		name: "sberts",
-		email: "sberts@neatshell.com",
-		url: "https://neatshell.com/about-me/"
+		email: "scberts@gmail.com",
+		url: "https://sberts.com/about-me/"
 	}
 }
