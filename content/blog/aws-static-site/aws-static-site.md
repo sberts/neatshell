@@ -11,11 +11,9 @@ tags:
   - Route 53
 ---
 {% image "./cloudfront.png", "AWS CloudFront" %}
-
 In this post I will describe how to setup a static web site on AWS with S3 and CloudFront. I'll be defining all infrastructure in CloudFormation. 
 
 First, I need a SSL certificate that I can use with CloudFront. The SSL certificate must be created in us-east-1. I'll define it in it's own template:
-
 ```
   Certificate:
     Type: AWS::CertificateManager::Certificate
@@ -30,9 +28,7 @@ First, I need a SSL certificate that I can use with CloudFront. The SSL certific
       SubjectAlternativeNames:
         - !Sub www.${DomainName}
 ```
-
 After the certificate is created, I'll define the rest of the resources in another template which can be deployed in a different region. I'll define a S3 bucket to store web site files and an origin access identity to secure access.
-
 ```
   S3Bucket:
     Type: AWS::S3::Bucket
@@ -58,9 +54,7 @@ After the certificate is created, I'll define the rest of the resources in anoth
                   - arn:aws:cloudfront::${AWS::AccountId}:distribution/${DistId}
                   - DistId: !GetAtt CloudFrontDistribution.Id
 ```
-
 Then, I use CloudFront to serve content from S3. I'm defining a CloudFrontOriginAccessIdentity to allow CloudFront to access my S3 bucket and my CloudFront distribution.
-
 ```
   CloudFrontOriginAccessControl:
     Type: AWS::CloudFront::OriginAccessControl
@@ -77,7 +71,9 @@ Then, I use CloudFront to serve content from S3. I'm defining a CloudFrontOrigin
     Properties:
       CloudFrontOriginAccessIdentityConfig:
         Comment: "origin identity"
-
+```
+In my distribution, I'm setting the default caching policy to <a href="https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html#managed-cache-caching-optimized">CachingOptimized</a>
+```
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
     DependsOn:
@@ -107,6 +103,7 @@ Then, I use CloudFront to serve content from S3. I'm defining a CloudFrontOrigin
           MinimumProtocolVersion: TLSv1.2_2021
           SslSupportMethod: sni-only
         DefaultCacheBehavior:
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6        
           AllowedMethods:
             - DELETE
             - GET
@@ -123,9 +120,7 @@ Then, I use CloudFront to serve content from S3. I'm defining a CloudFrontOrigin
               Forward: none
           ViewerProtocolPolicy: redirect-to-https
 ```
-
 I'm using a CloudFront function to help serve web requests that I found here <a href="https://stackoverflow.com/questions/59634922/how-do-i-serve-index-html-in-subfolders-with-s3-cloudfront">https://stackoverflow.com/questions/59634922/how-do-i-serve-index-html-in-subfolders-with-s3-cloudfront</a>
-
 ```
   DistributionFunction:
     Type: AWS::CloudFront::Function
@@ -152,9 +147,7 @@ I'm using a CloudFront function to help serve web requests that I found here <a 
         Runtime: cloudfront-js-1.0
       Name: redirect-index-request
 ```
-
 Finally, I'll create the DNS records in Route 53:
-
 ```
   RecordSetMain:
     Type: AWS::Route53::RecordSet
@@ -176,5 +169,4 @@ Finally, I'll create the DNS records in Route 53:
         HostedZoneId: Z2FDTNDATAQYW2  # CloudFront hosted zone ID
         DNSName: !GetAtt CloudFrontDistribution.DomainName
 ```
-
 The certificate template can be found <a href="/content/cert.yaml">here</a>. The CloudFront template can be found <a href="/content/website.yaml">here</a>. Once both templates have been deployed, I copy my web site files into the new S3 bucket and I should now have a functioning web site.
