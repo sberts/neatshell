@@ -39,12 +39,27 @@ Resources:
               Service: [codebuild.amazonaws.com]
             Action: ['sts:AssumeRole']
       Policies:
-        - PolicyName: CodeBuildPolicy
+        - PolicyName: S3Policy
           PolicyDocument:
             Statement:
               - Effect: Allow
-                Action: ['s3:*', 'logs:*', 'secretsmanager:GetSecretValue']
-                Resource: '*'
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::${S3Bucket}'
+                  - !Sub 'arn:aws:s3:::${S3Bucket}/*'
+        - PolicyName: CloudWatchPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${ProjectName}:*'
 
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
@@ -69,7 +84,7 @@ Resources:
       SourceVersion: !Ref BranchName
       Environment:
         Type: LINUX_CONTAINER
-        Image: aws/codebuild/standard:4.0
+        Image: aws/codebuild/standard:7.0
         ComputeType: BUILD_GENERAL1_SMALL
         EnvironmentVariables:
           - Name: S3BUCKET

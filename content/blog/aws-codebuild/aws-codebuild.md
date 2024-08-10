@@ -22,7 +22,7 @@ First, I'll create credentials to access GitHub. I'll place the credentials reso
     Properties:
       AuthType: PERSONAL_ACCESS_TOKEN
       ServerType: GITHUB
-      Token: !Sub "{{resolve:secretsmanager:${SecretName}:SecretString}}"
+      Token: !Sub "{% raw %}{{{% endraw %}resolve:secretsmanager:${SecretName}:SecretString{% raw %}}}{% endraw %}"
 ```
 
 Next, I'll define the IAM role for the CodeBuild Project. The rest of the resources will be defined in another template:
@@ -38,12 +38,27 @@ Next, I'll define the IAM role for the CodeBuild Project. The rest of the resour
               Service: [codebuild.amazonaws.com]
             Action: ['sts:AssumeRole']
       Policies:
-        - PolicyName: CodeBuildPolicy
+        - PolicyName: S3Policy
           PolicyDocument:
             Statement:
               - Effect: Allow
-                Action: ['s3:*', 'logs:*', 'secretsmanager:GetSecretValue']
-                Resource: '*'
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::${S3Bucket}'
+                  - !Sub 'arn:aws:s3:::${S3Bucket}/*'
+        - PolicyName: CloudWatchPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${ProjectName}:*'
 ```
 
 And finally, the CodeBuild project:
@@ -72,7 +87,7 @@ And finally, the CodeBuild project:
       SourceVersion: !Ref BranchName
       Environment:
         Type: LINUX_CONTAINER
-        Image: aws/codebuild/standard:4.0
+        Image: aws/codebuild/standard:7.0
         ComputeType: BUILD_GENERAL1_SMALL
         EnvironmentVariables:
           - Name: S3BUCKET
