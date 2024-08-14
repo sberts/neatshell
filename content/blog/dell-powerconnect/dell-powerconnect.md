@@ -135,7 +135,7 @@ sw1# copy running-config startup-config
 Optionally, you can enable SNMP for remote monitoring.
 
 ```
-sw1(config)# snmp-server contact "admin at neatshell dot com"
+sw1(config)# snmp-server contact "admin at sberts dot com"
 sw1(config)# snmp-server location "homelab"
 sw1(config)# snmp-server community public ro ipaddress <i>ip-of-your-snmp-agent</i>
 ```
