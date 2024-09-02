@@ -9,7 +9,7 @@ tags:
   - SSM
   - Terraform
 ---
-This post describes how to use Terraform to create a VPC and whitelist network traffic using NACLs. Remote access is allowed through SSM and VPC Endpoints. This example creates public subnets for ALBs, private subnets for apps running on EC2/ECS, database subnets for RDS mysql, and NACLs for each.
+This post describes how to use Terraform to create a VPC and whitelist network traffic using NACLs. Remote access is allowed through SSM and VPC Endpoints. This example creates public subnets for ALBs, private subnets for apps running on EC2/ECS, and database subnets for RDS mysql.
 
 Define the VPC name and CIDR in variables.tf:
 
